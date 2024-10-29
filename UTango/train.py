@@ -1,23 +1,9 @@
-import random
-from time import sleep
-
+import copy
+import numpy as np
 import torch
 from sklearn.metrics import accuracy_score
 from torch import nn
 from tqdm import tqdm
-import model
-import os.path as osp
-import os
-import copy
-import numpy as np
-
-
-def start_training(dataset):
-    random.shuffle(dataset)
-    train_dataset = dataset[:25] # Change based on your data split, if you want to have a validate set, you can also setup a validation set for it.
-    test_dataset = dataset[25:] # Change based on your data split, if you want to have a validate set, you can also setup a validation set for it.
-    model_ = model.UTango(h_size=128, max_context=5, drop_out_rate=0.5, gcn_layers=3)
-    train(epochs=1, trainLoader=train_dataset, testLoader=test_dataset, model=model_, learning_rate=0.0001)
 
 
 def evaluate_metrics(model, test_loader):
@@ -35,10 +21,9 @@ def evaluate_metrics(model, test_loader):
                     if tmp_acc > max_acc:
                         max_acc = tmp_acc
                 temp_acc += max_acc
-            temp_acc = temp_acc/len(out)
+            temp_acc = temp_acc / len(out)
             acc += temp_acc
-        acc = acc/len(test_loader)
-        sleep(0.1)
+        acc = acc / len(test_loader)
         print("Average Accuracy: ", acc)
 
 
@@ -109,7 +94,7 @@ def data_reformat(input_data, label):
     return output_d
 
 
-def train(epochs, trainLoader, testLoader, model, learning_rate):
+def train(epochs, trainLoader, testLoader, model, learning_rate, model_path=None):
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     model.train()
@@ -122,37 +107,28 @@ def train(epochs, trainLoader, testLoader, model, learning_rate):
                 total_loss = 0
                 for i in range(len(out)):
                     loop_set = loop_calculation(out[i], y_[i])
-                    min_loss = 999999
+                    min_loss = float('inf')
                     for data_setting in loop_set:
-                        temp_loss = criterion(torch.tensor(data_reformat(data_setting, y_[i]), dtype=torch.float), torch.tensor(y_[i]))
+                        temp_loss = criterion(
+                            torch.tensor(data_reformat(data_setting, y_[i]), dtype=torch.float),
+                            torch.tensor(y_[i])
+                        )
                         if temp_loss < min_loss:
                             min_loss = temp_loss
-                    total_loss = total_loss + min_loss
-                loss = torch.autograd.Variable(total_loss, requires_grad = True)
+                    total_loss += min_loss
+                loss = torch.autograd.Variable(total_loss, requires_grad=True)
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-                sleep(0.05)
                 if index % 20 == 0:
-                    print('epoch: {}, batch: {}, loss: {}'.format(e + 1, index + 1, loss.data))
-            exec('torch.save(model, os.getcwd() + "//model//" + "model_{}.pt")'.format(e + 1))
-            sleep(0.1)
+                    print(f'epoch: {e + 1}, batch: {index + 1}, loss: {loss.data}')
+
+            if model_path:
+                torch.save(model, model_path)
+                print(f"Model saved at {model_path}")
+
         evaluate_metrics(model=model, test_loader=testLoader)
+    
     except KeyboardInterrupt:
         evaluate_metrics(model=model, test_loader=testLoader)
 
-
-def demo_work(dataset):
-    model_ = torch.load("model.pt")
-    test_dataset = dataset
-    sleep(0.1)
-    evaluate_metrics(model=model_, test_loader=test_dataset)
-    print("Among the demo dataset, the results are shown above")
-
-
-if __name__ == '__main__':
-    dataset = []
-    for i in range(30): # Change based on your dataset size.
-        data = torch.load(osp.join(os.getcwd() + "/data/", 'data_{}.pt'.format(i)))
-        dataset.append(data)
-    start_training(dataset)

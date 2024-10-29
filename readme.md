@@ -72,25 +72,32 @@ Where ```Node_feature_vector``` is ```N*R``` sized torch tensors that represent 
 
 ```Context_info``` is an array that has the same length as the node numbers on the graph. Each element inside represent one node. If it is not a code change node, the value for that position is 0. If it is the code change node, the element is an array that include all index for the context nodes.
 
-## Requirement
+## Installation
 
-Install ```Torch``` by following the Instruction from [PyTorch](https://pytorch.org/get-started/locally).
+Use Python 3.9.20. You can use [pyenv](https://github.com/pyenv/pyenv) to run different Python versions at the same time.
 
-Install ```torch_sparse``` by following the Instruction from [pytorch_sparse](https://github.com/rusty1s/pytorch_sparse).
+Install `torch` first with:
+```bash
+pip install torch==1.13.1
+```
 
-Install ```torch_geometric``` by following the Instruction from [torch_geometric](https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html).
+Then, run following:
 
-See [requirement.txt](https://github.com/Commit-Untangling/blob/main/requirement.txt) for other required packages. 
+```shell
+pip install -r requirements.txt
+```
 
 
-## Instruction_to_Run_UTango
+## Train own model
 
-Download the UTango source code and run ```main.py``` to see the result for our experiment. 
+Put your data into `data` folder. Then run following:
 
-## Demo
+```bash
+python -m UTango train <model_path> <dataset_folder> <num_data_files>
+```
 
-Because the dataset that used in our approaches contains big graphs which are huge and the model may take a long time to well trained and tested. To quickly try our model, please download our demo that contains just limited amount of data. 
+## Run demo
 
-Demo download: https://drive.google.com/file/d/1C5BZjnVmM4gIrL58crsLJRP3HSLiCSE2/view?usp=sharing
-
-Put ```model.pt``` and ```data``` in the root folder of UTango and then run ```run_demo.py``` to see the results.
+```bash
+python -m UTango demo
+```

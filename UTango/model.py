@@ -46,7 +46,7 @@ class UTango(torch.nn.Module):
                     rep_vec = torch.reshape(feature_vec[i], (-1,)) * context_vec
                     output.append(rep_vec.tolist())
             threshold = torch.sigmoid(self.threshold)
-            clustering = AgglomerativeClustering(distance_threshold=threshold.tolist(), n_clusters=None)
+            clustering = AgglomerativeClustering(distance_threshold=threshold.tolist()[0], n_clusters=None)
             if len(output) == 1:
                 clu_labels = np.zeros(1)
             else:
